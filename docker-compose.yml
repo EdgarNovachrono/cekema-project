@@ -10,6 +10,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
       - VITE_API_URL=http://host.docker.internal:5000 # Lien vers ton backend local
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -25,6 +26,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true 
       - VITE_API_URL=http://host.docker.internal:5000 # Lien vers le même backend local
     extra_hosts:
       - "host.docker.internal:host-gateway"
