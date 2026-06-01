@@ -1,0 +1,2993 @@
+=== D:\cekema\frontend-elearning\src\App.css === 
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+ 
+
+=== D:\cekema\frontend-elearning\src\App.jsx === 
+/**
+ * src/App.jsx
+ *
+ * Changements :
+ * 1. <AuthProvider> wrappé autour de toute l'app → useAuth() fonctionne partout
+ * 2. Route /dashboard avec <ProtectedRoute>
+ * 3. Routes /signin et /signup redirigent vers /dashboard si déjà connecté
+ */
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Navbar    from './component/nav/Navbar';
+import Footer    from './component/footer/Footer';
+import Home      from './pages/home/Home';
+import Progrmas  from './pages/programs/Progrmas';
+import SingIn    from './pages/auth/signin/SingIn';
+import SingUp    from './pages/auth/signup/SignUp';
+import Dashboard from './pages/dashboard/Dashboard';
+import ProtectedRoute from './component/auth/ProtectedRoute';
+
+// Redirige vers /dashboard si déjà connecté (évite d'afficher /signin inutilement)
+function PublicOnlyRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null; // Attend la vérif du token
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+}
+
+function AppRoutes() {
+  return (
+    <main className="w-full bg-neutral-50 flex min-h-screen flex-col text-neutral-500">
+      <Navbar />
+
+      <Routes>
+        {/* ─── Pages publiques ─── */}
+        <Route path="/"        element={<Home />} />
+        <Route path="/programs" element={<Progrmas />} />
+
+        {/* ─── Auth (redirige si déjà connecté) ─── */}
+        <Route path="/signin" element={
+          <PublicOnlyRoute><SingIn /></PublicOnlyRoute>
+        } />
+        <Route path="/signup" element={
+          <PublicOnlyRoute><SingUp /></PublicOnlyRoute>
+        } />
+
+        {/* ─── Zone apprenant (protégée) ─── */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+
+        {/* ─── Fallback ─── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <Footer />
+    </main>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      {/* AuthProvider doit être DANS Router pour que useNavigate fonctionne dans les guards */}
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App; 
+
+=== D:\cekema\frontend-elearning\src\frontend.txt === 
+=== D:\cekema\frontend-elearning\src\App.css === 
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+ 
+
+=== D:\cekema\frontend-elearning\src\App.jsx === 
+/**
+ * src/App.jsx
+ *
+ * Changements :
+ * 1. <AuthProvider> wrappé autour de toute l'app → useAuth() fonctionne partout
+ * 2. Route /dashboard avec <ProtectedRoute>
+ * 3. Routes /signin et /signup redirigent vers /dashboard si déjà connecté
+ */
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Navbar    from './component/nav/Navbar';
+import Footer    from './component/footer/Footer';
+import Home      from './pages/home/Home';
+import Progrmas  from './pages/programs/Progrmas';
+import SingIn    from './pages/auth/signin/SingIn';
+import SingUp    from './pages/auth/signup/SignUp';
+import Dashboard from './pages/dashboard/Dashboard';
+import ProtectedRoute from './component/auth/ProtectedRoute';
+
+// Redirige vers /dashboard si déjà connecté (évite d'afficher /signin inutilement)
+function PublicOnlyRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null; // Attend la vérif du token
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+}
+
+function AppRoutes() {
+  return (
+    <main className="w-full bg-neutral-50 flex min-h-screen flex-col text-neutral-500">
+      <Navbar />
+
+      <Routes>
+        {/* ─── Pages publiques ─── */}
+        <Route path="/"        element={<Home />} />
+        <Route path="/programs" element={<Progrmas />} />
+
+        {/* ─── Auth (redirige si déjà connecté) ─── */}
+        <Route path="/signin" element={
+          <PublicOnlyRoute><SingIn /></PublicOnlyRoute>
+        } />
+        <Route path="/signup" element={
+          <PublicOnlyRoute><SingUp /></PublicOnlyRoute>
+        } />
+
+        {/* ─── Zone apprenant (protégée) ─── */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+
+        {/* ─── Fallback ─── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <Footer />
+    </main>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      {/* AuthProvider doit être DANS Router pour que useNavigate fonctionne dans les guards */}
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App; 
+
+=== D:\cekema\frontend-elearning\src\frontend.txt === 
+=== D:\cekema\frontend-elearning\src\App.css === 
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+   
+
+=== D:\cekema\frontend-elearning\src\index.css === 
+/*  */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+
+* {
+  box-sizing: border-box;
+  font-family: "Inter", serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  /* border-radius: 50%; */
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  /* border-radius: 50%; */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #a9a9a9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+
+/*  */ 
+
+=== D:\cekema\frontend-elearning\src\main.jsx === 
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext';
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+   <AuthProvider>
+      <App />
+    </AuthProvider>
+  </StrictMode>,
+)
+ 
+
+=== D:\cekema\frontend-elearning\src\assets\react.svg === 
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg> 
+
+=== D:\cekema\frontend-elearning\src\assets\vite.svg === 
+<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+ 
+
+=== D:\cekema\frontend-elearning\src\component\auth\ProtectedRoute.jsx === 
+/**
+ * src/component/auth/ProtectedRoute.jsx
+ * Redirige vers /signin si l'utilisateur n'est pas authentifié.
+ * Affiche un loader pendant la vérification de la session.
+ */
+
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+
+export default function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    // On stocke la page cible pour y revenir après connexion
+    return <Navigate to="/signin" state={{ from: location }} replace />;
+  }
+
+  return children;
+} 
+
+=== D:\cekema\frontend-elearning\src\component\breadcrumb\Breadcrumb.jsx === 
+import React from 'react'
+import { useLocation,Link } from "react-router-dom";
+
+
+const Breadcrumb = () => {
+    const location = useLocation();
+    const pathname= location.pathname.split('/').filter(x=>x)
+    //dynamic
+    const breadcrumbpaths=[
+        {name:"Home",link:"/"},
+        ...pathname.map((segment,index)=>({
+            name:segment.charAt(0).toUpperCase() + segment.slice(1),
+            link:`/${pathname.slice(0,index + 1).join('/')}`
+        })
+    )
+    ]
+  return (
+    <div className='w-fit flex items-center gap-x-2'>
+       { breadcrumbpaths.map((path,index)=>{
+        const isLast= index === breadcrumbpaths.length-1;
+        return(
+            <React.Fragment key={index}>
+                {isLast?(
+                    <p className="md:text-base
+                     text-sm font-normal text-zinc-400">
+                        {pathname}
+                    </p>
+                ):(
+                    <>
+                    <Link to={path.link} className="md:text-base
+                     text-sm font-normal text-zinc-300
+                     hover:text-zinc-100">
+                        {path.name}
+                     </Link>
+                     {/* seperator */}
+                     <span className="md:text-base
+                     text-sm font-normal text-zinc-200 ml-2">/</span>
+                    </>
+                    
+                )}
+            </React.Fragment>
+        )
+       }
+
+       )
+
+       }
+    </div>
+  )
+}
+
+export default Breadcrumb
+ 
+
+=== D:\cekema\frontend-elearning\src\component\category\CategoryCard.jsx === 
+import React from 'react'
+
+const CategoryCard = ({ icon, gradientFrom, gradientVia, gradientTo, title, description }) => {
+  return (
+    <div className={`w-full max-w-sm flex flex-col items-center justify-center gap-6 rounded-xl bg-gradient-to-tr hover:bg-gradient-to-tl
+      ${gradientFrom} ${gradientVia} ${gradientTo} 
+      px-6 py-8 transition-all ease-in-out duration-300 cursor-pointer
+      hover:scale-[1.02] hover:brightness-110 shadow-sm hover:shadow-lg`}>
+      
+      {/* Conteneur de l'icône (réduit à w-16 h-16) */}
+      <div className="w-16 h-16 flex items-center justify-center 
+        rounded-xl bg-gradient-to-tr from-indigo-500 via-sky-700 via-20% to-purple-700 shadow-inner">
+        <span className='text-3xl font-bold text-neutral-50'>
+          {icon}
+        </span> 
+      </div>
+
+      {/* Conteneur du texte (gap plus petit) */}
+      <div className="space-y-2 w-full text-center">
+        <h3 className='text-xl font-semibold text-neutral-800'>{title}</h3>
+        <p className='text-sm text-neutral-700 line-clamp-3'>
+          {description}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default CategoryCard 
+
+=== D:\cekema\frontend-elearning\src\component\footer\Footer.jsx === 
+import { Link } from "react-router-dom";
+import { FiBookOpen } from "react-icons/fi";
+
+const Footer = () => {
+    return (
+        <footer className="bg-sky-950 text-white space-y-16 py-16 md:px-16 sm:px-10 px-4">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {/* Logo Section */}
+                <div className="flex flex-col items-start">
+                    <Link to="/" className="text-3xl font-semibold text-neutral-200 flex items-center gap-x-2 mb-4">
+                        <FiBookOpen size={36} />
+                        LearnHub
+                    </Link>
+                    <p className="text-sm">
+                        The best place to discover new learning resources, books, and courses.
+                    </p>
+                </div>
+
+                {/* Customer Support Section */}
+                <div className="flex flex-col items-start">
+                    <h3 className="text-lg font-semibold mb-2">Customer Support</h3>
+                    <ul className="space-y-2">
+                        <li>
+                            <Link to="/faq" className="text-sm text-neutral-400 hover:text-white">FAQ</Link>
+                        </li>
+                        <li>
+                            <Link to="/contact" className="text-sm text-neutral-400 hover:text-white">Contact Us</Link>
+                        </li>
+                        <li>
+                            <Link to="/returns" className="text-sm text-neutral-400 hover:text-white">Returns</Link>
+                        </li>
+                        <li>
+                            <Link to="/shipping" className="text-sm text-neutral-400 hover:text-white">Shipping</Link>
+                        </li>
+                    </ul>
+                </div>
+
+                {/* Quick Links Section */}
+                <div className="flex flex-col items-start">
+                    <h3 className="text-lg font-semibold mb-2">Quick Links</h3>
+                    <ul className="space-y-2">
+                        <li>
+                            <Link to="/about" className="text-sm text-neutral-400 hover:text-white">About Us</Link>
+                        </li>
+                        <li>
+                            <Link to="/terms" className="text-sm text-neutral-400 hover:text-white">Terms of Service</Link>
+                        </li>
+                        <li>
+                            <Link to="/privacy" className="text-sm text-neutral-400 hover:text-white">Privacy Policy</Link>
+                        </li>
+                        <li>
+                            <Link to="/careers" className="text-sm text-neutral-400 hover:text-white">Careers</Link>
+                        </li>
+                    </ul>
+                </div>
+
+                {/* Social Media Section */}
+                <div className="flex flex-col items-start">
+                    <h3 className="text-lg font-semibold mb-2">Follow Us</h3>
+                    <ul className="space-y-2">
+                        <li>
+                            <a href="https://facebook.com" className="text-sm text-neutral-400 hover:text-white">Facebook</a>
+                        </li>
+                        <li>
+                            <a href="https://twitter.com" className="text-sm text-neutral-400 hover:text-white">Twitter</a>
+                        </li>
+                        <li>
+                            <a href="https://instagram.com" className="text-sm text-neutral-400 hover:text-white">Instagram</a>
+                        </li>
+                        <li>
+                            <a href="https://linkedin.com" className="text-sm text-neutral-400 hover:text-white">LinkedIn</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            {/* Footer Bottom Section */}
+            <div className="text-center text-sm mt-8 border-t border-neutral-700 pt-8">
+                <p className="text-neutral-400">&copy; 2026 LearnHub. All rights reserved.</p>
+            </div>
+        </footer>
+    );
+};
+
+export default Footer;
+ 
+
+=== D:\cekema\frontend-elearning\src\component\nav\Navbar.jsx === 
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { FaBars } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
+import navItems from "../../constants/navbarData";
+import { FiBookOpen } from "react-icons/fi";
+
+const Navbar = () => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    const location = useLocation(); // Get the current location
+
+    const toggleNavbar = () => {
+        setIsOpen(!isOpen);
+    };
+
+    const closeNavbar = () => {
+        setIsOpen(false);
+    };
+
+    // Function to handle scroll event
+    const handleScroll = () => {
+        if (window.scrollY > 100) {
+            setIsScrolled(true);
+        } else {
+            setIsScrolled(false);
+        }
+    };
+
+    // Adding event listener on mount and removing on unmount
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
+    return (
+        <div
+            id="navbar"
+            className={`w-full h-[8ch] backdrop-blur-sm flex items-center justify-between md:px-16 sm:px-10 px-4 fixed top-0 transition-all ease-in-out duration-300 z-50 ${isScrolled ? "bg-sky-50/30 border-b border-neutral-200" : "bg-transparent"
+                }`}
+        >
+            {/* Logo */}
+            <div className="flex items-center gap-2 md:pr-16 pr-0">
+                <Link to="/" className="text-lg font-semibold text-sky-700 flex items-center gap-x-2">
+                    <FiBookOpen size={24} />
+                    LearnHub
+                </Link>
+            </div>
+
+            {/* Hamburger Menu for Mobile */}
+
+            <div className="md:hidden">
+                <button
+                    onClick={toggleNavbar}
+                    className="text-neutral-600 focus:outline-none"
+                >
+                    <FaBars size={24} />
+                </button>
+            </div>
+
+            {/* Navbar items and buttons */}
+            <div
+                className={`fixed md:static top-0 right-0 h-screen md:h-auto w-full md:w-auto bg-sky-50 border-l md:border-none border-neutral-300 md:bg-transparent shadow-lg md:shadow-none transition-transform duration-300 ease-in-out transform flex-1 ${isOpen ? "translate-x-0" : "translate-x-full"
+                    } md:translate-x-0 z-60`}
+            >
+
+                {/* Logo and close icon Inside Toggle Menu */}
+                <div className="w-full md:hidden flex items-center justify-between px-4">
+                    {/* Logo */}
+                    <Link to="/" className="text-lg font-semibold text-sky-700 flex items-center gap-x-2">
+                        <FiBookOpen size={24} />
+                        LearnHub
+                    </Link>
+
+                    {/* Close Icon */}
+                    <div className="md:hidden flex justify-end py-6">
+                        <button
+                            onClick={toggleNavbar}
+                            className="text-red-600 focus:outline-none"
+                        >
+                            <IoMdClose size={28} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-b border-neutral-300 md:hidden"></div>
+
+                <div className="flex-1 flex flex-col md:flex-row items-center justify-between gap-6 p-6 md:p-0">
+                    {/* Navbar items */}
+                    <ul className="flex flex-col md:flex-row items-center md:gap-7 gap-4 md:text-base text-lg text-neutral-700 md:font-normal font-medium">
+                        {navItems.map((item) => (
+                            <li key={item.id}>
+                                <Link to={item.path} onClick={closeNavbar} className={`hover:text-sky-700 ease-in-out duration-300 ${location.pathname === item.path
+                                    ? "text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-sky-700 to-purple-700 font-semibold"
+                                    : ""
+                                    }`}>
+                                    {item.name}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {/* Buttons */}
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <Link to="/signin" className="w-fit px-6 py-2 rounded-full md:text-base text-xl text-neutral-800 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r from-indigo-500 via-sky-700 to-purple-700 font-medium bg-transparent transition-colors duration-200 cursor-pointer">
+                            Sign In
+                        </Link>
+                        <button className="w-fit bg-gradient-to-tr hover:bg-gradient-to-tl from-indigo-500 via-sky-700 via-20% to-purple-700 text-neutral-50 cursor-pointer py-2 px-6 rounded-xl text-base font-semibold ease-in-out duration-300">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Navbar;
+ 
+
+=== D:\cekema\frontend-elearning\src\component\pagetop\PageTop.jsx === 
+import React,{useEffect} from 'react'
+import Breadcrumb from "./../breadcrumb/Breadcrumb";
+
+const PageTop = ({pageTitle}) => {
+    useEffect(() => {
+        
+        window.scrollTo(0,0);
+    }, []);
+  return (
+    <div className='w-full bg-[url("/src/assets/page-top-bg.png")]
+      bg-no-repeat bg-cover bg-left md:aspect-[16/4] aspect-auto 
+    flex justify-center flex-col md:pt-16
+    pt-28 md:pb-0 md:px-16 sm:px-10 px-4 relative '>
+      {/* overlay */}
+      <div className="absolute w-full h-full top-0 left-0
+      bg-gradient-to-b from-zinc-50 via-zinc-100/40 to-zinc-950/60
+      opacity-50 z-10">
+
+      </div>
+      {/* page top content */}
+        <div className="space-y-3 z-20 relative py-3">
+            <h1 className="text-4xl font-bold text-zinc-50">
+                {pageTitle}
+            </h1>
+            {/* Breadcrumb */}
+               <Breadcrumb/>
+        </div>
+    </div>
+  )
+}
+
+export default PageTop
+ 
+
+=== D:\cekema\frontend-elearning\src\component\programs\ProgramsCard.jsx === 
+ import React from 'react'
+
+ import { Link } from 'react-router-dom'
+    import { FaTag,FaStar,FaUserTie } from 'react-icons/fa6'
+    import { IoMdHeartEmpty } from 'react-icons/io'
+    import { PiBookOpenTextFill } from 'react-icons/pi'
+    import { FiClock } from 'react-icons/fi'
+    import { FaAnglesRight } from 'react-icons/fa6'
+ const ProgramsCard = ({image,category,rating,title,lessons,students,duration,price}) => {
+   return (
+     <div className='w-full rounded-xl
+      border border-neutral-200 space-y-2 overflow-hidden'>
+       <img src={image} alt={title} className="w-full aspect-[16/10] object-cover object-center" />
+
+     <div className="md:p-4 p-3 space-y-5">
+                {/* section  category,rating*/}
+        <div className="w-full flex items-center justify-between">
+                <p className="w-fit text-sm text-sky-800 bg-sky-800/10 rounded-full px-3 py-1 flex
+                  items-center gap-x-1.5">
+                   <FaTag size={14}  className='text-sky-700'/> 
+                  {category}
+                </p>
+                <div className="flex items-center gap-x-3">
+                    <p className="text-sm 
+                    text-yellow-500 border 
+                    border-yellox-200
+                    rounded-full px-3 py-1 flex items-center gap-x-1">
+                        <FaStar size={14}  />
+                        {rating}
+                    </p>
+                    <button className="w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <IoMdHeartEmpty size={24}  />
+                    </button>
+                </div>
+        </div>
+        {/* section Title */}
+        <Link to={`/program/detail`} className="text-xl font-semibold
+        text-neutral-950 line-clamp-2 text-ellipsis">
+          {title}
+        </Link>
+        {/* lessions,students */}
+        <div className="w-full flex items-center justify-between flex-wrap gap-2">
+            {/* lessions and students */}
+            <div className="flex items-center gap-x-3">
+             <p className="text-sm text-neutral-800 font-medium flex items-center gap-x-1 5">
+               <PiBookOpenTextFill size={16} className='text-neutral-500'  />
+                {lessons} 
+                </p>  
+                <div className="w-1 h-1 rounded-full bg-neutral-400">
+
+                </div>
+             <p className="text-sm text-neutral-800 font-medium flex items-center gap-x-1 5">
+               <FaUserTie size={16} className='text-neutral-500'  />
+                {students} 
+                </p>  
+
+
+            </div>
+            {/* duration */}
+            <p className="text-sm text-neutral-800 font-medium flex items-center gap-x-1 5">
+               <FiClock size={16} className='text-neutral-500'  />
+                {duration} 
+                </p>  
+        </div>
+        {/* seperateur */}
+        <div className="w-full h-px bg-neutral-200">
+            {/* price and button */}
+        </div>
+         
+         <div className="w-full flex items-center justify-between">
+            <p className="text-lg font-semibold text-neutral-800">
+                {price}
+            </p>
+              <Link to={`/program/enroll-programs-title`} className="w-fit text-sky-900
+              text-sm font-medium flex items-center justify-center
+              gap-2 hover:text-sky-800 transition-all ease-in-out duration-300">
+                Enroll Now <FaAnglesRight size={14}  /> 
+            </Link>
+            <button className="px-4 py-2 rounded-full bg-sky-700 text-white text-sm font-medium hover:bg-sky-800 transition-colors duration-200">
+                View Details
+            </button>
+         </div>
+     </div>
+     </div>
+   )
+ }
+ 
+ export default ProgramsCard
+  
+
+=== D:\cekema\frontend-elearning\src\component\stats\StatsCard.jsx === 
+import React from 'react'
+
+const StatsCard = ({icon:Icon,bgColor,borderColor,count,iconColor,description}) => {
+  return (
+    <div className={`w-full md:px-6 md:py-6 px-3 py-4 border rounded-xl ${bgColor} ${borderColor}`}>
+      <div className="flex items-center md:justify-start justify-center gap-4 md:flex-nowrap flex-wrap">
+        <div className={`w-14 h-14 ${bgColor} border ${borderColor} 
+       rounded-xl flex items-center justify-center`}>
+           <span className={`text-3xl font-bold ${iconColor}`}>
+            <Icon/>
+            </span> 
+        </div>
+           <div className="flex items-center flex-col md:items-start space-y-0.5 md:text-start text-center">
+           
+            <h3 className='text-2xl font-bold text-neutral-700 m:text-start text-center'>
+                {count}
+                </h3>
+            <p className='text-sm text-neutral-500'>{description}</p>
+           </div>
+      </div>
+    </div>
+  )
+}
+
+export default StatsCard
+ 
+
+=== D:\cekema\frontend-elearning\src\constants\blogData.js === 
+const blogData = [
+    {
+        blogURL: "/blog-detail",
+        img: "https://cdn.pixabay.com/photo/2020/03/06/08/00/laptop-4906312_1280.jpg",
+        title: "The best place to discover new learning resources, books, and courses.",
+        tag: "Next JS",
+    },
+    {
+        blogURL: "/blog-detail",
+        img: "https://cdn.pixabay.com/photo/2021/07/09/13/51/notes-6399119_1280.jpg",
+        title: "The best place to discover new learning resources, books, and courses.",
+        tag: "React JS",
+    },
+    {
+        blogURL: "/blog-detail",
+        img: "https://cdn.pixabay.com/photo/2019/04/29/16/11/work-4166473_1280.png",
+        title: "The best place to discover new learning resources, books, and courses.",
+        tag: "Django",
+    },
+
+];
+
+export default blogData; 
+
+=== D:\cekema\frontend-elearning\src\constants\navbarData.js === 
+const navItems = [
+    {
+        id: 1,
+        name: "Home",
+        path: "/",
+    },
+    {
+        id: 2,
+        name: "Programs",
+        path: "/programs",
+    },
+    {
+        id: 3,
+        name: "Resources",
+        path: "/resources",
+    },
+    {
+        id: 4,
+        name: "About",
+        path: "/about",
+    },
+    {
+        id: 5,
+        name: "Contact",
+        path: "/contact",
+    },
+
+];
+
+export default navItems;
+ 
+
+=== D:\cekema\frontend-elearning\src\constants\programsData.js === 
+const programsData = [
+    {
+        image: "https://cdn.pixabay.com/photo/2020/02/24/04/26/web-design-4875188_640.jpg",
+        category: "Business",
+        rating: "4.5",
+        title: "The best place to discover new learning resources, books, and courses.",
+        lessons: "12+ Lessons",
+        students: "50+ Students",
+        duration: "10hr 30min",
+        price: "$100.89",
+    },
+    {
+        image: "https://cdn.pixabay.com/photo/2017/02/24/11/36/robot-2094539_640.jpg",
+        category: "Technology",
+        rating: "4.8",
+        title: "Learn the latest technologies and frameworks.",
+        lessons: "15+ Lessons",
+        students: "100+ Students",
+        duration: "12hr 45min",
+        price: "$120.99",
+    },
+    {
+        image: "https://cdn.pixabay.com/photo/2016/05/08/14/58/icon-1379228_640.png",
+        category: "Technology",
+        rating: "4.8",
+        title: "Learn the latest technologies and frameworks.",
+        lessons: "15+ Lessons",
+        students: "100+ Students",
+        duration: "12hr 45min",
+        price: "$120.99",
+    },
+    {
+        image: "https://cdn.pixabay.com/photo/2016/02/18/19/25/pc-1207886_640.jpg",
+        category: "Business",
+        rating: "4.5",
+        title: "The best place to discover new learning resources, books, and courses.",
+        lessons: "12+ Lessons",
+        students: "50+ Students",
+        duration: "10hr 30min",
+        price: "$100.89",
+    },
+    {
+        image: "https://cdn.pixabay.com/photo/2016/12/03/19/05/web-banners-1880393_640.png",
+        category: "Technology",
+        rating: "4.8",
+        title: "Learn the latest technologies and frameworks.",
+        lessons: "15+ Lessons",
+        students: "100+ Students",
+        duration: "12hr 45min",
+        price: "$120.99",
+    },
+    {
+        image: "https://cdn.pixabay.com/photo/2016/09/14/08/26/web-1668927_640.jpg",
+        category: "Technology",
+        rating: "4.8",
+        title: "Learn the latest technologies and frameworks.",
+        lessons: "15+ Lessons",
+        students: "100+ Students",
+        duration: "12hr 45min",
+        price: "$120.99",
+    }
+];
+
+export default programsData; 
+
+=== D:\cekema\frontend-elearning\src\constants\quizData.js === 
+const questions = [
+    {
+        id: 1,
+        question: "What is the full form of HTML?",
+        options: [
+            { text: "Hyper Text Markup Language", isCorrect: true },
+            { text: "High Tech Machine Learning", isCorrect: false },
+            { text: "Hyper Transfer Markup Language", isCorrect: false },
+            { text: "Home Tool Markup Language", isCorrect: false },
+        ],
+    },
+    {
+        id: 2,
+        question: "Which language is used for web development?",
+        options: [
+            { text: "Java", isCorrect: false },
+            { text: "Python", isCorrect: false },
+            { text: "JavaScript", isCorrect: true },
+            { text: "C++", isCorrect: false },
+        ],
+    },
+    {
+        id: 3,
+        question: "What does CSS stand for?",
+        options: [
+            { text: "Cascading Style Sheets", isCorrect: true },
+            { text: "Computer Styling Syntax", isCorrect: false },
+            { text: "Creative Style Sheet", isCorrect: false },
+            { text: "Coding Style System", isCorrect: false },
+        ],
+    },
+    {
+        id: 4,
+        question: "What is the main purpose of React.js?",
+        options: [
+            { text: "Database Management", isCorrect: false },
+            { text: "Building UI Components", isCorrect: true },
+            { text: "Machine Learning", isCorrect: false },
+            { text: "Operating Systems", isCorrect: false },
+        ],
+    },
+    {
+        id: 5,
+        question: "Which of these is a JavaScript framework?",
+        options: [
+            { text: "Django", isCorrect: false },
+            { text: "Laravel", isCorrect: false },
+            { text: "React", isCorrect: true },
+            { text: "Flask", isCorrect: false },
+        ],
+    },
+];
+
+export default questions; 
+
+=== D:\cekema\frontend-elearning\src\constants\statsData.js === 
+import { GrResources } from "react-icons/gr";
+
+const statsData = [
+    {
+        icon: GrResources,
+        bgColor: "bg-sky-100/30",
+        borderColor: "border-sky-300/60",
+        count: "100+",
+        iconColor: "text-sky-600",
+        description: "Online Courses",
+    },
+    {
+        icon: GrResources,
+        bgColor: "bg-purple-100/30",
+        borderColor: "border-purple-300/60",
+        count: "200+",
+        iconColor: "text-purple-600",
+        description: "Expert Tutors",
+    },
+    {
+        icon: GrResources,
+        bgColor: "bg-indigo-100/30",
+        borderColor: "border-indigo-300/60",
+        count: "10k+",
+        iconColor: "text-indigo-600",
+        description: "Students Enrolled",
+    },
+    {
+        icon: GrResources,
+        bgColor: "bg-orange-100/30",
+        borderColor: "border-orange-300/60",
+        count: "120+",
+        iconColor: "text-orange-600",
+        description: "Recorded Videos",
+    },
+
+];
+
+
+export default statsData; 
+
+=== D:\cekema\frontend-elearning\src\constants\testimonialData.js === 
+const testimonials = [
+    {
+        fullName: "John Doe",
+        image: "https://cdn.pixabay.com/photo/2023/07/25/10/21/girl-8148749_1280.jpg",
+        testimonialText: "This course changed my life! Highly recommended. This course changed my life! Highly recommended. This course changed my life! Highly recommended.",
+    },
+    {
+        fullName: "Jane Smith",
+        image: "https://cdn.pixabay.com/photo/2024/03/29/17/43/ai-generated-8663299_1280.png",
+        testimonialText: "Amazing content and great instructors.",
+    },
+    {
+        fullName: "Alice Johnson",
+        image: "",
+        testimonialText: "I learned so much in such a short time.",
+    },
+    {
+        fullName: "Bob Brown",
+        image: "",
+        testimonialText: "The best online course I've ever taken. This course changed my life! Highly recommended. This course changed my life! Highly recommended.",
+    },
+    {
+        fullName: "Charlie Davis",
+        image: "",
+        testimonialText: "Very well-structured and easy to follow.",
+    },
+    {
+        fullName: "Eve White",
+        image: "https://cdn.pixabay.com/photo/2021/04/27/04/15/girl-6210464_1280.jpg",
+        testimonialText: "I highly recommend this course to everyone.",
+    },
+];
+
+export default testimonials; 
+
+=== D:\cekema\frontend-elearning\src\context\AuthContext.jsx === 
+/**
+ * src/context/AuthContext.jsx
+ *
+ * FIX CRITIQUE :
+ *   - Le backend retourne { access_token, token_type, user }
+ *     → on lit data.access_token  (pas data.token)
+ *   - Le 2FA retourne { two_factor_required: true, challenge_token }
+ *     → on teste data.two_factor_required  (pas data.two_factor)
+ */
+
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { authApi, tokenStorage } from '../service/api'; // ← adapte si ton chemin diffère
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Restaurer la session depuis le token stocké
+  useEffect(() => {
+    const token = tokenStorage.get();
+    if (!token) { setLoading(false); return; }
+
+    authApi.me()
+      .then((data) => setUser(data.user ?? data))
+      .catch(() => tokenStorage.remove())
+      .finally(() => setLoading(false));
+  }, []);
+
+  // ─── Login ────────────────────────────────────────────────────────────────
+  const login = useCallback(async (email, password) => {
+    const data = await authApi.login(email, password);
+
+    // Le backend répond 202 + two_factor_required:true quand 2FA est activé
+    if (data.two_factor_required) {
+      return { twoFactor: true, challengeToken: data.challenge_token };
+    }
+
+    // ✅ FIX : le champ est "access_token", pas "token"
+    tokenStorage.set(data.access_token);
+    setUser(data.user);
+    return { twoFactor: false };
+  }, []);
+
+  // ─── Register ─────────────────────────────────────────────────────────────
+  const register = useCallback(async (formData) => {
+    const data = await authApi.register(formData);
+    // Même convention : access_token
+    tokenStorage.set(data.access_token ?? data.token);
+    setUser(data.user);
+  }, []);
+
+  // ─── Logout ───────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
+    try { await authApi.logout(); } catch (_) {}
+    tokenStorage.remove();
+    setUser(null);
+  }, []);
+
+  // ─── 2FA Challenge ────────────────────────────────────────────────────────
+  const twoFactorChallenge = useCallback(async (challengeToken, code) => {
+    const data = await authApi.twoFactorChallenge(challengeToken, code);
+    tokenStorage.set(data.access_token ?? data.token);
+    setUser(data.user);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      twoFactorChallenge,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth doit être utilisé dans <AuthProvider>');
+  return ctx;
+}
+
+export default AuthContext; 
+
+=== D:\cekema\frontend-elearning\src\hooks\useCourses.js === 
+/**
+ * src/hooks/useCourses.js
+ * Hooks pour récupérer les formations depuis le backend CekemaSmart.
+ *
+ * Endpoints utilisés :
+ *   GET /api/courses          → liste publique (sans prix si non connecté)
+ *   GET /api/courses/:id      → détail d'une formation
+ *   GET /api/enrollments/me   → formations de l'apprenant connecté
+ *
+ * Réponse backend (CourseResource) :
+ *   { id, title, description, category, type, thumbnail,
+ *     duration_months, is_active, trainer, modules,
+ *     price, base_price, hybrid_price (null si non connecté) }
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { coursesApi, enrollmentsApi } from '../service/api';
+
+// ─── Liste globale des formations ─────────────────────────────────────────────
+
+/**
+ * Récupère toutes les formations actives du catalogue.
+ * Utilisable sans authentification (les prix sont masqués).
+ *
+ * Retourne :
+ *   courses  : CourseResource[]
+ *   loading  : boolean
+ *   error    : string | null
+ *   refetch  : () => void
+ */
+export function useCourses() {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchCourses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await coursesApi.list();
+      // Le backend retourne { data: [...] } (Laravel Resource Collection)
+      setCourses(Array.isArray(response) ? response : response.data ?? []);
+    } catch (err) {
+      setError(err.message ?? 'Impossible de charger les formations.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  return { courses, loading, error, refetch: fetchCourses };
+}
+
+// ─── Détail d'une formation ───────────────────────────────────────────────────
+
+/**
+ * Récupère une formation par son ID.
+ *
+ * Retourne :
+ *   course   : CourseResource | null
+ *   loading  : boolean
+ *   error    : string | null
+ */
+export function useCourse(id) {
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    coursesApi
+      .show(id)
+      .then((response) => setCourse(response.data ?? response))
+      .catch((err) => setError(err.message ?? 'Erreur lors du chargement.'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  return { course, loading, error };
+}
+
+// ─── Formations de l'apprenant connecté ──────────────────────────────────────
+
+/**
+ * Récupère les inscriptions (formations rejointes) de l'apprenant connecté.
+ * Requiert un token valide dans localStorage ('cekema_token').
+ *
+ * Réponse backend (EnrollmentResource) :
+ *   { id, formation{id,title,type,thumbnail,duration},
+ *     mode, status, payment_status, progress, certificate }
+ *
+ * Retourne :
+ *   enrollments : EnrollmentResource[]
+ *   loading     : boolean
+ *   error       : string | null
+ *   refetch     : () => void
+ */
+export function useMyEnrollments() {
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchEnrollments = useCallback(async () => {
+    // Pas de token → apprenant non connecté, on retourne vide proprement
+    const token = localStorage.getItem('cekema_token');
+    if (!token) {
+      setEnrollments([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await enrollmentsApi.mine();
+      // Réponse paginée : { data: [...], meta, links }
+      setEnrollments(Array.isArray(response) ? response : response.data ?? []);
+    } catch (err) {
+      setError(err.message ?? 'Impossible de charger vos formations.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnrollments();
+  }, [fetchEnrollments]);
+
+  return { enrollments, loading, error, refetch: fetchEnrollments };
+} 
+
+=== D:\cekema\frontend-elearning\src\hooks\useDashboard.js === 
+/**
+ * src/hooks/useDashboard.js
+ * Hook pour le dashboard apprenant.
+ *
+ * Endpoint : GET /api/dashboard/apprenant (requiert Bearer token)
+ *
+ * Réponse backend :
+ * {
+ *   enrollments: [{ course_id, course_name, progress, status }],
+ *   certificates: [...],
+ *   wallet_balance: number,
+ *   marketing: {
+ *     message: string,
+ *     recommendations: Course[]
+ *   }
+ * }
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { dashboardApi } from '../service/api';
+
+/**
+ * Récupère les données du dashboard de l'apprenant connecté.
+ *
+ * Retourne :
+ *   dashboard  : { enrollments, certificates, wallet_balance, marketing } | null
+ *   loading    : boolean
+ *   error      : string | null
+ *   refetch    : () => void
+ */
+export function useDashboard() {
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchDashboard = useCallback(async () => {
+    const token = localStorage.getItem('cekema_token');
+    if (!token) {
+      setDashboard(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await dashboardApi.get();
+      setDashboard(data);
+    } catch (err) {
+      setError(err.message ?? 'Impossible de charger le dashboard.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  return { dashboard, loading, error, refetch: fetchDashboard };
+} 
+
+=== D:\cekema\frontend-elearning\src\hooks\useEnrollments.js === 
+/**
+ * src/hooks/useEnrollments.js
+ *
+ * FIX : accepte un paramètre `enabled` (booléen).
+ * Le fetch ne se déclenche QUE quand enabled===true.
+ * Ça élimine la race condition ET le 401 pour les visiteurs.
+ *
+ * Usage :
+ *   const { isAuthenticated } = useAuth();
+ *   const { enrollments } = useEnrollments(isAuthenticated);
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { enrollmentsApi } from '../service/api'; // adapte le chemin à ton projet
+
+export function useEnrollments(enabled = false) {
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState(null);
+
+  const fetchEnrollments = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await enrollmentsApi.mine();
+      setEnrollments(data.data ?? data);
+    } catch (err) {
+      if (err.status === 401) {
+        setEnrollments([]);
+      } else {
+        setError(err.message ?? 'Impossible de charger vos inscriptions.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) {
+      // Non connecté : on remet à zéro proprement
+      setEnrollments([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    fetchEnrollments();
+  }, [enabled, fetchEnrollments]); // se re-déclenche quand enabled passe de false → true
+
+  return { enrollments, loading, error, refetch: fetchEnrollments };
+} 
+
+=== D:\cekema\frontend-elearning\src\pages\auth\signin\SingIn.jsx === 
+/**
+ * src/pages/auth/signin/SingIn.jsx  (nom conservé pour éviter de casser l'import)
+ * Page de connexion — connectée à l'API CekemaSmart
+ */
+
+import React, { useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa6';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+
+// ─── Sous-formulaire 2FA ──────────────────────────────────────────────────────
+
+function TwoFactorForm({ challengeToken, onSuccess }) {
+  const { twoFactorChallenge } = useAuth();
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await twoFactorChallenge(challengeToken, code);
+      onSuccess();
+    } catch (err) {
+      setError(err.message ?? 'Code invalide.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md w-full bg-neutral-50 border border-neutral-200 shadow-sm space-y-8 rounded-xl p-8">
+      <div className="space-y-1.5">
+        <h1 className="text-2xl text-neutral-800 font-bold">Vérification 2FA</h1>
+        <p className="text-sm text-neutral-600">
+          Entrez le code à 6 chiffres de votre application d'authentification.
+        </p>
+      </div>
+
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="space-y-1.5">
+          <label className="text-sm text-neutral-600 font-medium">Code TOTP</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            placeholder="000000"
+            className="w-full rounded-lg px-3 h-12 bg-transparent focus:bg-sky-500/5 border border-neutral-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 outline-none transition tracking-widest text-center text-lg"
+          />
+        </div>
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={submitting || code.length !== 6}
+          className="w-full h-12 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 transition disabled:opacity-50"
+        >
+          {submitting ? 'Vérification…' : 'Valider'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ─── Page principale ──────────────────────────────────────────────────────────
+
+const SignIn = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ─── CORRECTION : Redirection par défaut vers /programs au lieu de /dashboard ───
+  const redirectTo = location.state?.from?.pathname ?? '/programs';
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // État 2FA
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [challengeToken, setChallengeToken] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setFieldErrors({});
+    setSubmitting(true);
+
+    try {
+      const result = await login(email, password);
+      if (result.twoFactor) {
+        setChallengeToken(result.challengeToken);
+        setTwoFactor(true);
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
+    } catch (err) {
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      } else {
+        setError(err.message ?? 'Identifiants incorrects.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (twoFactor) {
+    return (
+      <div className="w-full min-h-screen pt-[6ch] flex items-center justify-center">
+        <TwoFactorForm
+          challengeToken={challengeToken}
+          onSuccess={() => navigate(redirectTo, { replace: true })}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full min-h-screen pt-[6ch] flex items-center justify-center">
+      <div className="max-w-md w-full bg-neutral-50 border border-neutral-200 shadow-sm space-y-8 rounded-xl p-8">
+
+        {/* Header */}
+        <div className="space-y-1.5">
+          <h1 className="text-2xl text-neutral-800 font-bold">Sign In</h1>
+          <p className="text-sm text-neutral-600">Connexion</p>
+        </div>
+
+        {/* Erreur globale */}
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* Form */}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-sm text-neutral-600 font-medium">
+              Adresse email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Entrez votre email..."
+              required
+              className="w-full rounded-lg px-3 h-12 bg-transparent focus:bg-sky-500/5 border border-neutral-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 outline-none transition"
+            />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-500">{fieldErrors.email[0]}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1.5">
+            <label htmlFor="password" className="text-sm text-neutral-600 font-medium">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Entrez votre mot de passe..."
+                required
+                className="w-full rounded-lg px-3 h-12 bg-transparent focus:bg-sky-500/5 border border-neutral-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 outline-none transition"
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400"
+                onClick={() => setShowPassword((p) => !p)}
+              >
+                {showPassword ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+            </div>
+            {fieldErrors.password && (
+              <p className="text-xs text-red-500">{fieldErrors.password[0]}</p>
+            )}
+          </div>
+
+          {/* Remember + Forgot */}
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4" />
+              Se souvenir de moi
+            </label>
+            <Link to="/forgot-password" className="text-sky-600 hover:text-neutral-800">
+              Mot de passe oublié ?
+            </Link>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full h-12 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Connexion…
+              </span>
+            ) : (
+              'Se connecter'
+            )}
+          </button>
+
+          {/* OR */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-neutral-200" />
+            <span className="text-sm text-neutral-500">Ou connectez-vous avec</span>
+            <div className="flex-1 h-px bg-neutral-200" />
+          </div>
+
+          {/* Google */}
+          <button
+            type="button"
+            className="w-full py-2 px-4 border border-neutral-300 rounded-lg hover:bg-neutral-100 flex items-center justify-center gap-2 text-sm"
+          >
+            <FaGoogle size={16} />
+            Google
+          </button>
+
+          {/* Sign up */}
+          <div className="flex justify-center gap-2 text-sm">
+            <p>Vous n'avez pas de compte ?</p>
+            <Link to="/signup" className="text-sky-600 hover:text-neutral-800">
+              Créer un compte
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SignIn; 
+
+=== D:\cekema\frontend-elearning\src\pages\auth\signup\SignUp.jsx === 
+/**
+ * src/pages/auth/signup/SignUp.jsx
+ * Page d'inscription — connectée à l'API CekemaSmart
+ */
+
+import React, { useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa6';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+
+const SignUp = () => {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setFieldErrors({});
+
+    if (form.password !== form.password_confirmation) {
+      setFieldErrors({ password_confirmation: ['Les mots de passe ne correspondent pas.'] });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await register(form);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      } else {
+        setError(err.message ?? 'Une erreur est survenue lors de l\'inscription.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Helper pour les inputs
+  const inputClass =
+    'w-full rounded-lg px-3 h-12 bg-transparent focus:bg-sky-500/5 border border-neutral-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 outline-none transition';
+
+  return (
+    <div className="w-full min-h-screen pt-[6ch] flex items-center justify-center">
+      <div className="max-w-md w-full bg-neutral-50 border border-neutral-200 shadow-sm space-y-8 rounded-xl p-8">
+
+        {/* Header */}
+        <div className="space-y-1.5">
+          <h1 className="text-2xl text-neutral-800 font-bold">Sign up</h1>
+          <p className="text-sm text-neutral-600">Créer un compte</p>
+        </div>
+
+        {/* Erreur globale */}
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+
+          {/* Prénom */}
+          <div className="space-y-1.5">
+            <label htmlFor="first_name" className="text-sm text-neutral-600 font-medium">
+              Prénom
+            </label>
+            <input
+              id="first_name"
+              name="first_name"
+              type="text"
+              value={form.first_name}
+              onChange={handleChange}
+              placeholder="Entrez votre prénom..."
+              required
+              className={inputClass}
+            />
+            {fieldErrors.first_name && (
+              <p className="text-xs text-red-500">{fieldErrors.first_name[0]}</p>
+            )}
+          </div>
+
+          {/* Nom */}
+          <div className="space-y-1.5">
+            <label htmlFor="last_name" className="text-sm text-neutral-600 font-medium">
+              Nom
+            </label>
+            <input
+              id="last_name"
+              name="last_name"
+              type="text"
+              value={form.last_name}
+              onChange={handleChange}
+              placeholder="Entrez votre nom..."
+              required
+              className={inputClass}
+            />
+            {fieldErrors.last_name && (
+              <p className="text-xs text-red-500">{fieldErrors.last_name[0]}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-sm text-neutral-600 font-medium">
+              Adresse email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Entrez votre email..."
+              required
+              className={inputClass}
+            />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-500">{fieldErrors.email[0]}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1.5">
+            <label htmlFor="password" className="text-sm text-neutral-600 font-medium">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Entrez votre mot de passe..."
+                required
+                className={inputClass}
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400"
+                onClick={() => setShowPassword((p) => !p)}
+              >
+                {showPassword ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+            </div>
+            {fieldErrors.password && (
+              <p className="text-xs text-red-500">{fieldErrors.password[0]}</p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-1.5">
+            <label htmlFor="password_confirmation" className="text-sm text-neutral-600 font-medium">
+              Confirmer le mot de passe
+            </label>
+            <input
+              id="password_confirmation"
+              name="password_confirmation"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password_confirmation}
+              onChange={handleChange}
+              placeholder="Confirmez votre mot de passe..."
+              required
+              className={inputClass}
+            />
+            {fieldErrors.password_confirmation && (
+              <p className="text-xs text-red-500">{fieldErrors.password_confirmation[0]}</p>
+            )}
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-lg h-12 px-8 bg-neutral-800 text-white hover:bg-neutral-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Création en cours…
+              </span>
+            ) : (
+              'Créer votre compte'
+            )}
+          </button>
+
+          {/* OR */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-neutral-200" />
+            <span className="text-sm text-neutral-500">Ou inscrivez-vous avec</span>
+            <div className="flex-1 h-px bg-neutral-200" />
+          </div>
+
+          {/* Google (placeholder) */}
+          <button
+            type="button"
+            className="w-full rounded-lg py-2 px-4 border border-neutral-300 hover:bg-neutral-100 flex items-center justify-center gap-2 text-sm"
+          >
+            <FaGoogle size={16} />
+            Google
+          </button>
+
+          {/* Login */}
+          <div className="flex justify-center gap-2">
+            <p className="text-sm text-neutral-600">Vous avez déjà un compte ?</p>
+            <Link to="/signin" className="text-sm text-sky-600 hover:text-neutral-800">
+              Connexion
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SignUp; 
+
+=== D:\cekema\frontend-elearning\src\pages\category\Category.jsx === 
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { FaAngleRight,FaReact} from 'react-icons/fa6'
+import CategoryCard from '../../component/category/CategoryCard'
+const Category = () => {
+  return (
+    <div className='w-full md:px-16 sm:px-10 px-4 space-y-8'>
+      {/* Top section */}
+          <div className="w-full flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-neutral-800">
+                Top Categories
+            </h2>
+          <div className="flex items-center gap-4">
+            <Link to="/category" className="flex items-center gap-4 
+            text-sm font-semibold text-neutral-800 hover:text-sky-800 
+            cursor-pointer ease-in-out duration-300">
+                 View All<FaAngleRight  /> 
+            </Link>
+          </div>
+         </div> 
+
+      {/* category section */}
+      <div className="w-full grid md:grid-cols-4 grid-cols-1 md:gap-10 gap-5">
+        {/* les premiers cards */}
+        <CategoryCard
+         icon={<FaReact />}
+         gradientFrom={'from-indigo-500'}
+         gradientVia={'via-sky-700 via-20%'}
+         gradientTo={'to-purple-700 '}
+         title={'Web Development'}
+         description={'Learn the fundamentals of web development with HTML, CSS, and JavaScript.'}
+        />
+        <CategoryCard
+         icon={<FaReact />}
+         gradientFrom={'from-indigo-500'}
+         gradientVia={'via-sky-700 via-20%'}
+         gradientTo={'to-purple-700 '}
+         title={'Web Development'}
+         description={'Learn the fundamentals of web development with HTML, CSS, and JavaScript.'}
+        />
+      </div>
+    </div>
+
+  )
+}
+
+export default Category 
+ 
+
+=== D:\cekema\frontend-elearning\src\pages\dashboard\Dashboard.jsx === 
+/**
+ * src/pages/dashboard/Dashboard.jsx
+ * Fix : useEnrollments(isAuthenticated) — le fetch attend que le contexte confirme la session.
+ */
+
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useEnrollments } from '../../hooks/useEnrollments';
+import { FiBook, FiAward, FiClock, FiLogOut, FiChevronRight } from 'react-icons/fi';
+
+function ProgressBar({ value = 0 }) {
+  const pct = Math.min(100, Math.max(0, value));
+  return (
+    <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
+      <div
+        className="h-full bg-gradient-to-r from-indigo-500 to-sky-500 rounded-full transition-all duration-500"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
+function EnrollmentCard({ enrollment }) {
+  const course   = enrollment.formation ?? enrollment;
+  const progress = enrollment.progress ?? 0;
+  const status   = enrollment.status ?? 'active';
+
+  const statusLabel = {
+    active:    { text: 'En cours',   bg: 'bg-sky-100',   text_color: 'text-sky-700'   },
+    completed: { text: 'Terminée',   bg: 'bg-green-100', text_color: 'text-green-700' },
+    pending:   { text: 'En attente', bg: 'bg-amber-100', text_color: 'text-amber-700' },
+  }[status] ?? { text: status, bg: 'bg-neutral-100', text_color: 'text-neutral-600' };
+
+  return (
+    <div className="w-full bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div className="w-full aspect-[16/9] bg-neutral-100 overflow-hidden">
+        {course.thumbnail ? (
+          <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-sky-100">
+            <FiBook size={32} className="text-indigo-400" />
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base font-semibold text-neutral-800 leading-snug line-clamp-2">
+            {course.title ?? 'Formation'}
+          </h3>
+          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${statusLabel.bg} ${statusLabel.text_color}`}>
+            {statusLabel.text}
+          </span>
+        </div>
+
+        {course.duration_months && (
+          <p className="text-xs text-neutral-500 flex items-center gap-1">
+            <FiClock size={12} /> {course.duration_months} mois
+          </p>
+        )}
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-neutral-500">
+            <span>Progression</span>
+            <span className="font-medium text-neutral-700">{progress}%</span>
+          </div>
+          <ProgressBar value={progress} />
+        </div>
+
+        <Link
+          to={`/programs/${course.id}`}
+          className="w-full flex items-center justify-center gap-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition"
+        >
+          Continuer <FiChevronRight size={14} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="w-full rounded-xl border border-neutral-200 overflow-hidden animate-pulse">
+      <div className="w-full aspect-[16/9] bg-neutral-200" />
+      <div className="p-4 space-y-3">
+        <div className="h-5 bg-neutral-200 rounded w-3/4" />
+        <div className="h-3 bg-neutral-200 rounded w-1/3" />
+        <div className="h-2 bg-neutral-200 rounded w-full" />
+        <div className="h-9 bg-neutral-200 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const { user, logout, isAuthenticated } = useAuth();
+
+  // ✅ FIX : on passe isAuthenticated → le fetch ne part qu'une fois la session confirmée
+  const { enrollments, loading, error } = useEnrollments(isAuthenticated);
+
+  const completedCount = enrollments.filter((e) => e.status === 'completed').length;
+  const firstName = user?.first_name ?? user?.name?.split(' ')[0] ?? 'Apprenant';
+
+  return (
+    <div className="w-full min-h-screen pb-16 space-y-10">
+
+      {/* Header */}
+      <div className="w-full bg-gradient-to-r from-indigo-600 to-sky-600 px-4 md:px-16 py-10 text-white">
+        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-1">
+            <p className="text-indigo-200 text-sm font-medium">Espace Apprenant</p>
+            <h1 className="text-3xl font-bold">Bonjour, {firstName} 👋</h1>
+            <p className="text-indigo-100 text-sm">
+              {loading
+                ? 'Chargement…'
+                : `${enrollments.length} formation${enrollments.length !== 1 ? 's' : ''} inscrite${enrollments.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition"
+          >
+            <FiLogOut size={16} /> Déconnexion
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto w-full px-4 md:px-16 space-y-10">
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            { icon: <FiBook size={20} />,  label: 'Formations inscrites', value: loading ? '…' : enrollments.length, color: 'text-indigo-600 bg-indigo-50' },
+            { icon: <FiAward size={20} />, label: 'Formations terminées', value: loading ? '…' : completedCount,      color: 'text-green-600 bg-green-50'  },
+            { icon: <FiClock size={20} />, label: 'En cours',             value: loading ? '…' : enrollments.length - completedCount, color: 'text-sky-600 bg-sky-50' },
+          ].map(({ icon, label, value, color }) => (
+            <div key={label} className="bg-white border border-neutral-200 rounded-xl p-4 flex items-center gap-4">
+              <div className={`p-3 rounded-lg ${color}`}>{icon}</div>
+              <div>
+                <p className="text-2xl font-bold text-neutral-800">{value}</p>
+                <p className="text-xs text-neutral-500">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mes formations */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-neutral-800">Mes formations</h2>
+            <Link to="/programs" className="text-sm text-sky-600 hover:text-sky-800 flex items-center gap-1">
+              Voir le catalogue <FiChevronRight size={14} />
+            </Link>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="grid md:grid-cols-3 grid-cols-1 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : enrollments.length > 0 ? (
+            <div className="grid md:grid-cols-3 grid-cols-1 gap-6">
+              {enrollments.map((e) => <EnrollmentCard key={e.id} enrollment={e} />)}
+            </div>
+          ) : !error && (
+            <div className="bg-white border border-dashed border-neutral-300 rounded-xl py-16 text-center space-y-4">
+              <div className="w-14 h-14 mx-auto rounded-full bg-indigo-50 flex items-center justify-center">
+                <FiBook size={24} className="text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-neutral-700 font-medium">Vous n'êtes inscrit à aucune formation.</p>
+                <p className="text-sm text-neutral-400 mt-1">Explorez notre catalogue et commencez votre parcours !</p>
+              </div>
+              <Link
+                to="/programs"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition"
+              >
+                Découvrir les formations <FiChevronRight size={14} />
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+} 
+
+=== D:\cekema\frontend-elearning\src\pages\home\Home.jsx === 
+import { useState, useEffect } from 'react';
+import Apprenant from './aprenant/Apprenant';
+import Stats from '../stats/Stats';
+import Category from '../category/Category';
+import Programs from './programs/Programs';
+const Home = () => {
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+  return (
+    <div className='space-y-16 w-full min-h-screen flex flex-col pb-16'>
+      {/* HeroSection  */}
+      <Apprenant />
+       {/* Stats Section  */}
+       <div className="!-mt-16">
+        <Stats/>
+       </div>
+        {/* category Section  */}
+        <Category />
+       {/* programs section  */}
+         <Programs/>
+         {/* quick access section  */}
+         {/* blog section  */}
+
+    </div>
+  )
+}
+
+export default Home
+ 
+
+=== D:\cekema\frontend-elearning\src\pages\home\about\about.jsx === 
+ 
+
+=== D:\cekema\frontend-elearning\src\pages\home\aprenant\Apprenant.jsx === 
+import React from 'react'
+import HeroImg from '../../../assets/hero-1.png'
+
+const Apprenant = () => {
+  return (
+    <div className='w-full md:h-screen h-auto bg-gradient-to-tr 
+    from-indigo-500/80 via-sky-500/80 to-purple-700/30 
+    flex items-end justify-center md:px-16 sm:px-10 px-4 
+    md:pt-0 md:pb-0 pt-[10ch] pb-8'>
+
+      <div className="w-full flex items-center justify-between
+      md:gap-16 gap-4 md:flex-nowrap flex-wrap md:flex-row flex-col-reverse">
+
+        {/* content */}
+        <div className="md:w-[45%] w-full md:space-y-8 space-y-6">
+          <div className="space-y-2">
+            <p className="text-lg md:text-2xl font-medium text-neutral-600">
+              Leader formation en ligne
+            </p>
+
+            <h1 className="md:text-[5rem] text-5xl font-bold text-transparent 
+            bg-clip-text bg-gradient-to-r from-indigo-500 via-sky-700 to-purple-700 leading-[1]">
+              Rejoignez-nous et commencez votre parcours d'apprentissage dès aujourd'hui !
+            </h1>
+          </div>
+
+          <p className="text-lg font-normal text-neutral-800 md:pr-16">
+            Bienvenue dans notre plateforme d'apprentissage !
+          </p>
+               <div className="w-full flex items-center gap-6">
+                <button className="bg-indigo-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-indigo-700 transition-colors duration-300">
+                  Commencer
+                </button>
+                <button className="border border-indigo-600 text-indigo-600 px-6 py-3 rounded-full font-semibold hover:bg-indigo-100 transition-colors duration-300">
+                  En savoir plus
+                </button>
+               </div>
+        </div>
+
+        {/* image */}
+        <div className="md:w-[45%] w-full aspect-square flex items-end justify-end">
+          <img src={HeroImg} alt="Apprenant" className="w-full h-full object-contain" />
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+export default Apprenant 
+
+=== D:\cekema\frontend-elearning\src\pages\home\programs\Programs.jsx === 
+/**
+ * src/pages/home/programs/Programs.jsx
+ * Section "formations populaires" de la page d'accueil.
+ * Données chargées depuis GET /api/courses (backend Laravel).
+ *
+ * Affiche les 6 premières formations actives.
+ * Les champs utilisés depuis CourseResource :
+ *   id, title, category, thumbnail, duration_months, type, trainer
+ * (price masqué pour les visiteurs non connectés)
+ */
+
+import React from 'react';
+import { FaAngleRight } from 'react-icons/fa6';
+import { Link } from 'react-router-dom';
+import ProgramsCard from '../../../component/programs/ProgramsCard';
+import { useCourses } from '../../../hooks/useCourses';
+
+// ─── Skeleton Loader ──────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="w-full rounded-xl border border-neutral-200 overflow-hidden animate-pulse">
+      <div className="w-full aspect-[16/10] bg-neutral-200" />
+      <div className="p-4 space-y-4">
+        <div className="flex justify-between">
+          <div className="h-6 w-24 bg-neutral-200 rounded-full" />
+          <div className="h-6 w-16 bg-neutral-200 rounded-full" />
+        </div>
+        <div className="h-6 w-full bg-neutral-200 rounded" />
+        <div className="h-4 w-3/4 bg-neutral-200 rounded" />
+        <div className="h-px bg-neutral-200" />
+        <div className="flex justify-between">
+          <div className="h-5 w-20 bg-neutral-200 rounded" />
+          <div className="h-8 w-28 bg-neutral-200 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Mapping CourseResource → props de ProgramsCard ───────────────────────────
+
+/**
+ * Convertit un CourseResource (backend) en props attendues par ProgramsCard.
+ * Adapte les champs pour correspondre exactement à l'interface existante.
+ */
+function mapCourseToCardProps(course) {
+  return {
+    // ProgramsCard attend : image, category, rating, title,
+    //   lessons, students, duration, price
+    image: course.thumbnail ?? 'https://cdn.pixabay.com/photo/2020/02/24/04/26/web-design-4875188_640.jpg',
+    category: course.category ?? 'Formation',
+    rating: '4.5',                                    // non fourni par l'API publique
+    title: course.title,
+    lessons: course.modules?.length
+      ? `${course.modules.length} module${course.modules.length > 1 ? 's' : ''}`
+      : 'Modules disponibles',
+    students: 'Apprenants',                           // non fourni dans CourseResource
+    duration: course.duration_months
+      ? `${course.duration_months} mois`
+      : 'Durée variable',
+    price: course.price != null ? `${course.price} FCFA` : 'Gratuit',
+    // On passe l'id pour le lien vers le détail
+    id: course.id,
+  };
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
+
+const Programs = () => {
+  const { courses, loading, error } = useCourses();
+
+  // On n'affiche que les 6 premières formations sur la home
+  const displayedCourses = courses.slice(0, 6);
+
+  return (
+    <div className="w-full md:px-16 sm:px-10 px-4 space-y-8">
+      {/* En-tête de section */}
+      <div className="w-full flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-neutral-800">
+          Formations populaires
+        </h2>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/programs"
+            className="flex items-center gap-1 text-sm font-semibold text-neutral-800 hover:text-sky-800 cursor-pointer ease-in-out duration-300"
+          >
+            Voir tout <FaAngleRight />
+          </Link>
+        </div>
+      </div>
+
+      {/* Gestion des états */}
+      {error && (
+        <div className="w-full py-8 text-center">
+          <p className="text-red-500 text-sm">{error}</p>
+          <p className="text-neutral-400 text-xs mt-1">
+            Vérifiez que le backend tourne sur le port 5715.
+          </p>
+        </div>
+      )}
+
+      {/* Grille de formations */}
+      <div className="w-full grid md:grid-cols-3 grid-cols-1 md:gap-10 gap-5">
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          : displayedCourses.length > 0
+          ? displayedCourses.map((course) => (
+              <ProgramsCard key={course.id} {...mapCourseToCardProps(course)} />
+            ))
+          : !error && (
+              <div className="col-span-3 text-center text-neutral-400 py-12">
+                Aucune formation disponible pour le moment.
+              </div>
+            )}
+      </div>
+    </div>
+  );
+};
+
+export default Programs; 
+
+=== D:\cekema\frontend-elearning\src\pages\programs\Progrmas.jsx === 
+/**
+ * src/pages/programs/Progrmas.jsx
+ * Fix : MyEnrollments reçoit isAuthenticated et le passe à useEnrollments(enabled)
+ */
+
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { FaAngleRight } from 'react-icons/fa6';
+import PageTopBanner from '../../component/pagetop/PageTop';
+import ProgramsCard  from '../../component/programs/ProgramsCard';
+import { useCourses }     from '../../hooks/useCourses';
+import { useEnrollments } from '../../hooks/useEnrollments';
+import { useAuth }        from '../../context/AuthContext';
+
+function SkeletonCard() {
+  return (
+    <div className="w-full rounded-xl border border-neutral-200 overflow-hidden animate-pulse">
+      <div className="w-full aspect-[16/10] bg-neutral-200" />
+      <div className="p-4 space-y-4">
+        <div className="flex justify-between">
+          <div className="h-6 w-24 bg-neutral-200 rounded-full" />
+          <div className="h-6 w-16 bg-neutral-200 rounded-full" />
+        </div>
+        <div className="h-6 w-full bg-neutral-200 rounded" />
+        <div className="h-4 w-3/4 bg-neutral-200 rounded" />
+      </div>
+    </div>
+  );
+}
+
+function mapCourseToCardProps(course, isEnrolled = false, progress = null) {
+  return {
+    image:     course.thumbnail ?? 'https://cdn.pixabay.com/photo/2020/02/24/04/26/web-design-4875188_640.jpg',
+    category:  course.category  ?? 'Formation',
+    rating:    '4.5',
+    title:     course.title,
+    lessons:   course.modules?.length
+                 ? course.modules.length + ' module' + (course.modules.length > 1 ? 's' : '')
+                 : 'Modules disponibles',
+    students:  'Apprenants',
+    duration:  course.duration_months ? course.duration_months + ' mois' : 'Durée variable',
+    price:     course.price != null ? Number(course.price).toLocaleString() + ' FCFA' : 'Gratuit',
+    id:        course.id,
+    isEnrolled,
+    progress,
+  };
+}
+
+// ✅ Reçoit isAuthenticated en prop → le passe à useEnrollments(enabled)
+function MyEnrollments({ isAuthenticated }) {
+  const { enrollments, loading, error } = useEnrollments(isAuthenticated);
+
+  if (loading) return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-neutral-800 border-b pb-3 border-neutral-200">
+        Mes formations suivies
+      </h2>
+      <div className="grid md:grid-cols-3 grid-cols-1 md:gap-10 gap-5">
+        {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+      </div>
+    </div>
+  );
+
+  if (error || enrollments.length === 0) return null;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-neutral-800 border-b pb-3 border-neutral-200">
+        Mes formations suivies
+        <span className="ml-2 text-base font-normal text-neutral-400">({enrollments.length})</span>
+      </h2>
+      <div className="grid md:grid-cols-3 grid-cols-1 md:gap-10 gap-5">
+        {enrollments.map((enroll) => {
+          const course = enroll.formation ?? enroll;
+          return (
+            <ProgramsCard
+              key={'enrolled-' + enroll.id}
+              {...mapCourseToCardProps(course, true, enroll.progress)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const Progrmas = () => {
+  const { isAuthenticated } = useAuth();
+  const { courses, loading, error, refetch } = useCourses();
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const categories = useMemo(
+    () => [...new Set(courses.map((c) => c.category).filter(Boolean))],
+    [courses]
+  );
+
+  const filteredCourses = useMemo(() => {
+    return courses.filter((course) => {
+      const matchSearch = search.trim() === '' ||
+        course.title?.toLowerCase().includes(search.toLowerCase()) ||
+        course.description?.toLowerCase().includes(search.toLowerCase());
+      const matchCat = selectedCategory === 'all' || course.category === selectedCategory;
+      return matchSearch && matchCat;
+    });
+  }, [courses, search, selectedCategory]);
+
+  return (
+    <div className="w-full min-h-screen flex-col space-y-16 pb-16">
+      <PageTopBanner pageTitle="Nos Formations" />
+
+      <div className="space-y-12 w-full md:px-16 sm:px-10 px-4">
+
+        {/* Recherche + filtres */}
+        <div className="w-full flex flex-wrap items-center gap-4">
+          <input
+            type="text"
+            placeholder="Rechercher une formation..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-sm w-full rounded-lg px-4 h-12 bg-transparent border border-neutral-300 focus:border-sky-500 outline-none text-neutral-700 ease-in-out duration-300"
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-fit rounded-lg px-3 h-12 bg-white border border-neutral-300 focus:border-sky-500 outline-none text-neutral-700 cursor-pointer"
+          >
+            <option value="all">Toutes les catégories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* ✅ isAuthenticated passé en prop : MyEnrollments contrôle lui-même quand fetcher */}
+        {isAuthenticated && <MyEnrollments isAuthenticated={isAuthenticated} />}
+
+        {/* Catalogue général */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b pb-3 border-neutral-200">
+            <h2 className="text-2xl font-bold text-neutral-800">
+              {isAuthenticated ? "Découvrir d'autres formations" : 'Notre Catalogue'}
+            </h2>
+            <Link to="/programs" className="flex items-center gap-1 text-sm font-semibold text-neutral-800 hover:text-sky-800 transition">
+              Voir tout <FaAngleRight />
+            </Link>
+          </div>
+
+          {error && (
+            <div className="text-center py-6 space-y-2">
+              <p className="text-red-500 font-medium">{error}</p>
+              <button onClick={refetch} className="px-4 py-2 bg-sky-500 text-white rounded-lg text-sm hover:bg-sky-600 transition">
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          <div className="w-full grid md:grid-cols-3 grid-cols-1 md:gap-x-10 md:gap-y-10 gap-y-8">
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+              : filteredCourses.length > 0
+              ? filteredCourses.map((course) => (
+                  <ProgramsCard key={course.id} {...mapCourseToCardProps(course)} />
+                ))
+              : !error && (
+                  <div className="col-span-3 text-center py-12 text-neutral-400">
+                    Aucune formation disponible pour le moment.
+                  </div>
+                )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default Progrmas; 
+
+=== D:\cekema\frontend-elearning\src\pages\stats\Stats.jsx === 
+import React from 'react'
+import StatsCard from '../../component/stats/StatsCard'
+import  statsData  from '../../constants/statsData'
+const Stats = () => {
+  return (
+    <div className='w-full flex items-center 
+    justify-center bg-neutral-100 py-12 md:px-16 sm:px-10 px-4' >
+      <div className="w-full grid md:grid-cols-4 grid-cols-2 md:gap-10 gap-5">
+        {/* creations des premiers cards statistiques */}
+        {statsData.map((stats,index) => (
+          <StatsCard key={index} {...stats}/>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default Stats
+ 
+
+=== D:\cekema\frontend-elearning\src\service\api.js === 
+/**
+ * src/service/api.js
+ * Couche HTTP centrale — CekemaSmart eLearning Frontend
+ *
+ * Backend accessible sur : http://host.docker.internal:5715 (depuis le conteneur)
+ * ou http://localhost:5715 (depuis l'hôte)
+ */
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5715';
+
+// ─── Token Storage ─────────────────────────────────────────────────────────────
+const TOKEN_KEY = 'cekema_token';
+
+export const tokenStorage = {
+  get: () => localStorage.getItem(TOKEN_KEY),
+  set: (token) => localStorage.setItem(TOKEN_KEY, token),
+  remove: () => localStorage.removeItem(TOKEN_KEY),
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildHeaders(extra = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...extra,
+  };
+  const token = tokenStorage.get();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+async function request(method, path, body = null, options = {}) {
+  const url = `${BASE_URL}/api${path}`;
+  const config = {
+    method,
+    headers: buildHeaders(options.headers ?? {}),
+  };
+
+  if (body) config.body = JSON.stringify(body);
+
+  const response = await fetch(url, config);
+
+  if (response.status === 401) {
+    tokenStorage.remove();
+  }
+
+  let data;
+  const contentType = response.headers.get('Content-Type') ?? '';
+  if (contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    data = { message: await response.text() };
+  }
+
+  if (!response.ok) {
+    const err = new Error(data?.message ?? 'Erreur réseau');
+    err.status = response.status;
+    err.errors = data?.errors ?? null;
+    throw err;
+  }
+
+  return data;
+}
+
+const api = {
+  get: (path, options) => request('GET', path, null, options),
+  post: (path, body, options) => request('POST', path, body, options),
+  put: (path, body, options) => request('PUT', path, body, options),
+  delete: (path, options) => request('DELETE', path, null, options),
+};
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export const authApi = {
+  login: (email, password) => api.post('/login', { email, password }),
+  register: (data) => api.post('/register', data),
+  logout: () => api.post('/logout'),
+  me: () => api.get('/me'),
+  forgotPassword: (email) => api.post('/forgot-password', { email }),
+  resetPassword: (data) => api.post('/reset-password', data),
+  twoFactorChallenge: (challenge_token, code) =>
+    api.post('/two-factor/challenge', { challenge_token, code }),
+};
+
+// ─── Formations (Courses) ─────────────────────────────────────────────────────
+// GET /api/courses → public (sans prix)
+// GET /api/courses → avec token Bearer → avec prix (si authentifié)
+// La réponse backend : { data: [ CourseResource, ... ] }
+// CourseResource contient : id, title, description, category, type,
+//   thumbnail, duration_months, is_active, trainer, modules, price, etc.
+
+export const coursesApi = {
+  /**
+   * Liste toutes les formations actives du catalogue.
+   * Endpoint: GET /api/courses
+   * Réponse: { data: CourseResource[] }
+   */
+  list: () => api.get('/courses'),
+
+  /**
+   * Détail d'une formation.
+   * Endpoint: GET /api/courses/:id
+   * Réponse: { data: CourseResource }
+   */
+  show: (id) => api.get(`/courses/${id}`),
+};
+
+// ─── Inscriptions (Enrollments) ───────────────────────────────────────────────
+// GET /api/enrollments/me → formations de l'apprenant connecté (requiert token)
+// Réponse paginée : { data: EnrollmentResource[], meta: {...}, links: {...} }
+// EnrollmentResource contient : id, formation{id,title,type,thumbnail,duration},
+//   mode, status, payment_status, progress, start_date, end_date, certificate
+
+export const enrollmentsApi = {
+  /**
+   * Formations auxquelles l'apprenant est inscrit.
+   * Endpoint: GET /api/enrollments/me
+   * Requiert: Bearer token
+   */
+  mine: () => api.get('/enrollments/me'),
+
+  /**
+   * Progression détaillée d'une inscription.
+   * Endpoint: GET /api/enrollments/:id/progress
+   */
+  progress: (enrollmentId) => api.get(`/enrollments/${enrollmentId}/progress`),
+
+  /**
+   * S'inscrire à une formation.
+   * Endpoint: POST /api/enrollments
+   * Body: { formation_id, mode }
+   */
+  enroll: (formation_id, mode) => api.post('/enrollments', { formation_id, mode }),
+};
+
+// ─── Dashboard apprenant ──────────────────────────────────────────────────────
+// GET /api/dashboard/apprenant → stats + inscriptions + recommandations
+// Réponse: {
+//   enrollments: [{course_id, course_name, progress, status}],
+//   certificates: [...],
+//   wallet_balance: number,
+//   marketing: { message, recommendations: Course[] }
+// }
+
+export const dashboardApi = {
+  /**
+   * Dashboard apprenant.
+   * Endpoint: GET /api/dashboard/apprenant
+   * Requiert: Bearer token
+   */
+  get: () => api.get('/dashboard/apprenant'),
+};
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const notificationsApi = {
+  list: () => api.get('/notifications'),
+  unreadCount: () => api.get('/notifications/unread-count'),
+  markRead: (id) => api.post(`/notifications/${id}/read`),
+  markAllRead: () => api.post('/notifications/read-all'),
+  destroy: (id) => api.delete(`/notifications/${id}`),
+};
+
+export default api; 
+
+=== D:\cekema\frontend-elearning\src\utils\storage.js === 
+export const tokenStorage = {
+  get: () => localStorage.getItem('token'),
+  set: (token) => localStorage.setItem('token', token),
+  clear: () => localStorage.removeItem('token'),
+}; 
+

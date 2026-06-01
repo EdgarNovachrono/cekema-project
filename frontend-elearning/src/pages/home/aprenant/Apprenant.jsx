@@ -1,5 +1,5 @@
 import React from 'react'
-import HeroImg from '../../../assets/hero-1.png'
+import HeroImg from '../../../assets/african-american-college-student-with-laptop-sunny-day-city-street .png'
 
 const Apprenant = () => {
   return (

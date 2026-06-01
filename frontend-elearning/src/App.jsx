@@ -1,34 +1,48 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-import Navbar from "./component/nav/Navbar"
-import Footer from "./component/footer/Footer"
-import Home from "./pages/home/Home"
-import Progrmas from "./pages/programs/Progrmas"
+/**
+ * src/App.jsx
+ * Router principal — avec route /dashboard protégée.
+ */
 
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './component/nav/Navbar';
+import Footer from './component/footer/Footer';
+import Home from './pages/home/Home';
+import Progrmas from './pages/programs/Progrmas';
+import SingIn from './pages/auth/signin/SingIn';
+import SingUp from './pages/auth/signup/SignUp';
+import Dashboard from './pages/dashboard/Dashboard';
+import ProtectedRoute from './component/auth/ProtectedRoute';
 
 function App() {
   return (
     <>
       <Router>
         <main className="w-full bg-neutral-50 flex min-h-screen flex-col text-neutral-500">
-          {/* Navbar section */}
           <Navbar />
 
-          {/* Routes */}
-          {
-           <Routes>
-            <Route path="/" element={<Home />} />
+          <Routes>
+            {/* Pages publiques */}
+            <Route path="/"         element={<Home />} />
             <Route path="/programs" element={<Progrmas />} />
+            <Route path="/signin"   element={<SingIn />} />
+            <Route path="/signup"   element={<SingUp />} />
 
-          </Routes> 
-          
-          }
+            {/* Dashboard apprenant — protégé */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
 
-          {/* Footer Section */}
           <Footer />
         </main>
       </Router>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
