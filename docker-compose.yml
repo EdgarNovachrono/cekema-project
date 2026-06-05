@@ -1,32 +1,34 @@
 services:
-  ecommerce-app:
-    build:
-      context: ./frontend-ecommerce
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:5173" # Accessible sur http://localhost:3000
-    volumes:
-      - ./frontend-ecommerce:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - VITE_API_URL=http://host.docker.internal:5000 # Lien vers ton backend local
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  ecommerce-app:
+    build:
+      context: ./frontend-ecommerce
+      dockerfile: Dockerfile.dev
+      network: host # <-- Force l'utilisation de ta connexion directe pour le build
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./frontend-ecommerce:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://host.docker.internal:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  elearning-app:
-    build:
-      context: ./frontend-elearning
-      dockerfile: Dockerfile.dev
-    ports:
-      - "4000:5173" # Accessible sur http://localhost:4000
-    volumes:
-      - ./frontend-elearning:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true 
-      - VITE_API_URL=http://localhost:5715 # Lien vers le même backend local
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  elearning-app:
+    build:
+      context: ./frontend-elearning
+      dockerfile: Dockerfile.dev
+      network: host # <-- Idem ici
+    ports:
+      - "4000:5173"
+    volumes:
+      - ./frontend-elearning:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true 
+      - VITE_API_URL=http://localhost:5715
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

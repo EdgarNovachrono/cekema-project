@@ -1,8 +1,7 @@
 FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install --no-audit --no-fund
+RUN npm install && npm install --save-optional @rolldown/binding-linux-x64-musl
 COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host"]
