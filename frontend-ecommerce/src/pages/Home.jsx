@@ -2,7 +2,12 @@ import React from 'react'
 import maBanniere from "../assets/28ad0309a75a9430d8e7ff9e7bf1ad38 (1).jpg";
 import  {categories}  from '../contanst/categories';
 import ProductGrid from '../Components/ProductGrid';
+import Footer from '../Components/Footer';
+import { useDispatch } from 'react-redux';
+import { setSelectedCategory } from '../features/products/ProductsSlice';
 const Home = () => {
+  
+  const dispatch=useDispatch();
   return (
     <div>
       <div 
@@ -17,7 +22,7 @@ const Home = () => {
         {categories.map((cat)=>{
             return(
   <button className="bg-gray-300 py-2 px-4 rounded-md text-black activate:scale-105
-          hover:bg-zinc-400 transition-all ease-in" key={cat}>
+          hover:bg-zinc-400 transition-all ease-in" key={cat} onClick={()=>dispatch(setSelectedCategory(cat))}>
             {cat}
           </button>
             );
@@ -25,6 +30,8 @@ const Home = () => {
         </div>
       <ProductGrid/>
       </div>
+
+      <Footer/>
     </div>
   )
 }

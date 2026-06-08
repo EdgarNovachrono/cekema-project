@@ -471,3 +471,4 @@ export const produits = [
     enStock: true
   }
 ];
+export default produits;

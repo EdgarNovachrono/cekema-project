@@ -2,12 +2,17 @@ import React,{useState} from 'react'
 import { Link } from 'react-router-dom'
 import { User,ShoppingCart } from 'lucide-react'
 import logo from '../assets/Logo_blanc.png'
+import { useDispatch,useSelector } from 'react-redux'
+import { filterBySearch  } from '../features/products/ProductsSlice'
 function Navbar() {
    const [isOpen, setIsOpen] = useState(false);
    // user basculement de l'état du menu déroulant
     const handleUser=() => {
         setIsOpen(!isOpen);
     };
+    const dispatch = useDispatch();
+    const searchQuery=useSelector((state)=>state.products.searchQuery);
+
   return <header className='bg-white shadow-md p'>
     <>
       <div className="py-4 shadow-md">
@@ -54,6 +59,8 @@ function Navbar() {
              type="text"
               placeholder="rechercher vos produits..."
               className="border border-gray-300 rounded-l px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+              value={searchQuery}
+              onChange={(e)=>dispatch(filterBySearch(e.target.value))}
               />
             </form>
              <Link>
