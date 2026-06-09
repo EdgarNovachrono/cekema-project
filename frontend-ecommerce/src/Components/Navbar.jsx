@@ -12,6 +12,8 @@ function Navbar() {
     };
     const dispatch = useDispatch();
     const searchQuery=useSelector((state)=>state.products.searchQuery);
+    const cartItems=useSelector((state)=>state.cart.items);
+    const itemCount=cartItems.reduce((total,item)=>total + item.quantity,0);
 
   return <header className='bg-white shadow-md p'>
     <>
@@ -63,8 +65,13 @@ function Navbar() {
               onChange={(e)=>dispatch(filterBySearch(e.target.value))}
               />
             </form>
-             <Link>
+             <Link to="/cart" className="relative">
               <ShoppingCart size={40} className="bg-gray-100 px-2 text-black cursor-pointer rounded-full" />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
               </Link>
       </nav>
     </>
