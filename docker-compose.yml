@@ -11,22 +11,14 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
-      - VITE_API_URL=http://host.docker.internal:5000
+      # RECTIFICATION : Le navigateur doit pointer sur le port HÔTE de votre backend PHP
+      - VITE_API_URL=http://localhost:8080 
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - cekema_network  
 
-  elearning-app:
-    build:
-      context: ./frontend-elearning
-      dockerfile: Dockerfile.dev
-    ports:
-      - "4000:5173"
-    volumes:
-      - ./frontend-elearning:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - VITE_API_URL=http://host.docker.internal:5715
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+ 
+networks:
+  cekema_network:
+    external: true
