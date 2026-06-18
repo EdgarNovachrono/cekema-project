@@ -7,10 +7,13 @@ import { produitsApi } from '../../service/api';
 
 export const fetchProduits = createAsyncThunk(
   'products/fetchAll',
-  async (params, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
       const data = await produitsApi.getAll(params);
-      return data.produits || [];
+      return {
+        produits: data.produits || [],
+        pagination: data.pagination || null,
+      };
     } catch (err) {
       return rejectWithValue('Erreur chargement produits');
     }
@@ -36,57 +39,82 @@ export const fetchCategories = createAsyncThunk(
 const productsSlice = createSlice({
   name: 'products',
   initialState: {
-    items: [],
-    filteredItems: [],
-    categories: ['ALL'],
+    items: [],                // produits de la PAGE COURANTE seulement
+    // Tableau d'objets { id: number|null, nom: string }
+    // id=null pour "ALL" — on envoie l'id entier au backend (categorie_id)
+    categories: [{ id: null, nom: 'ALL' }],
+    selectedCategoryId: null,    // null = toutes catégories
+    selectedCategoryNom: 'ALL',  // pour l'affichage des boutons
     searchQuery: '',
-    selectedCategory: 'ALL',
+    pagination: {
+      current_page: 1,
+      limit: 12,
+      total_items: 0,
+      has_more: false,
+    },
     isLoading: false,
     error: null,
   },
   reducers: {
-    filterBySearch: (state, action) => {
+    // Remplace filterBySearch — met à jour la query et remet la page à 1
+    setSearchQuery: (state, action) => {
       state.searchQuery = action.payload;
-      state.filteredItems = filterProducts(state);
+      state.pagination.current_page = 1;
     },
+    // Reçoit { id, nom } — stocke l'id pour l'API et le nom pour l'affichage
     setSelectedCategory: (state, action) => {
-      state.selectedCategory = action.payload;
-      state.filteredItems = filterProducts(state);
+      const { id, nom } = action.payload;
+      state.selectedCategoryId = id;       // null si "ALL"
+      state.selectedCategoryNom = nom;
+      state.pagination.current_page = 1;
+    },
+    // Navigation entre pages
+    setPage: (state, action) => {
+      state.pagination.current_page = action.payload;
     },
   },
   extraReducers: (builder) => {
-  builder
-    .addCase(fetchProduits.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    })
-    .addCase(fetchProduits.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.items = action.payload;
-      state.filteredItems = action.payload;
-    })
-    .addCase(fetchProduits.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    })
-    .addCase(fetchCategories.fulfilled, (state, action) => {  // ← un seul
-      state.categories = ['ALL', ...action.payload.map(c => c.nom)];
-    });
-},
+    builder
+      .addCase(fetchProduits.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProduits.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.items = action.payload.produits;
+        // On fusionne pour ne pas perdre limit si le backend ne le renvoie pas
+        if (action.payload.pagination) {
+          state.pagination = {
+            ...state.pagination,
+            ...action.payload.pagination,
+          };
+        }
+      })
+      .addCase(fetchProduits.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        // On conserve { id, nom } pour pouvoir envoyer l'id entier au backend
+        state.categories = [
+          { id: null, nom: 'ALL' },
+          ...action.payload.map((c) => ({ id: c.id, nom: c.nom })),
+        ];
+      });
+  },
 });
 
-// Fonction de filtre locale
-function filterProducts(state) {
-  return state.items.filter((item) => {
-    const nom = (item.nom || item.name || '').toLowerCase();
-    const matchSearch = nom.includes(state.searchQuery.toLowerCase());
-    const matchCat =
-      state.selectedCategory === 'ALL' ||
-      (item.categorie || '').toLowerCase() ===
-        state.selectedCategory.toLowerCase();
-    return matchSearch && matchCat;
-  });
-}
+export const { setSearchQuery, setSelectedCategory, setPage } = productsSlice.actions;
 
-export const { filterBySearch, setSelectedCategory } = productsSlice.actions;
+// Sélecteur pratique pour l'affichage des boutons catégorie
+export const selectCategories = (state) => state.products.categories;
+export const selectSelectedCategoryNom = (state) => state.products.selectedCategoryNom;
+
+// Sélecteurs
+export const selectPagination = (state) => state.products.pagination;
+export const selectTotalPages = (state) => {
+  const { total_items, limit } = state.products.pagination;
+  return Math.ceil(total_items / limit) || 1;
+};
+
 export default productsSlice.reducer;

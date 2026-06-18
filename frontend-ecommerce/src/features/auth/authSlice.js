@@ -1,10 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi, tokenStorage } from '../../service/api';
 
-// ============================================================
-// Thunks asynchrones
-// ============================================================
-
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
@@ -14,7 +10,7 @@ export const loginUser = createAsyncThunk(
       return data.user;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || 'Erreur de connexion'
+        err.response?.data?.message || 'Email ou mot de passe incorrect'
       );
     }
   }
@@ -42,79 +38,63 @@ export const fetchCurrentUser = createAsyncThunk(
       const data = await authApi.me();
       return data.user;
     } catch {
+      tokenStorage.remove();
       return rejectWithValue(null);
     }
   }
 );
 
 export const logoutUser = createAsyncThunk('auth/logout', async () => {
-  await authApi.logout();
-  tokenStorage.remove();
+  try { await authApi.logout(); } catch {}
+  finally { tokenStorage.remove(); }
 });
-
-// ============================================================
-// Slice
-// ============================================================
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: null,       // { id, nom, prenom, email, role, pays, ville }
+    user: null,
     isLoading: false,
-    isAuthenticated: false,
+    isAuthenticated: !!tokenStorage.get(),
+    isInitialized: false,
     error: null,
   },
   reducers: {
     clearError: (state) => { state.error = null; },
   },
   extraReducers: (builder) => {
-    // Login
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      .addCase(loginUser.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
+        state.isLoading = false; state.user = action.payload;
+        state.isAuthenticated = true; state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+        state.isLoading = false; state.error = action.payload; state.isAuthenticated = false;
       });
 
-    // Register
     builder
-      .addCase(registerUser.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      .addCase(registerUser.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
+        state.isLoading = false; state.user = action.payload;
+        state.isAuthenticated = true; state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+        state.isLoading = false; state.error = action.payload; state.isAuthenticated = false;
       });
 
-    // Fetch current user
     builder
+      .addCase(fetchCurrentUser.pending, (state) => { state.isLoading = true; })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.isAuthenticated = true;
+        state.isLoading = false; state.user = action.payload;
+        state.isAuthenticated = true; state.isInitialized = true;
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
+        state.isLoading = false; state.user = null;
+        state.isAuthenticated = false; state.isInitialized = true;
       });
 
-    // Logout
     builder.addCase(logoutUser.fulfilled, (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
+      state.user = null; state.isAuthenticated = false; state.isInitialized = true;
     });
   },
 });

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Star, Sparkles, Users, TrendingUp } from 'lucide-react';
-import { addToCart } from '../features/Cart/CartSlice';
+import { addToCart, ajouterAuPanier } from '../features/Cart/CartSlice';
 
 // Badge selon la source de recommandation
 const SourceBadge = ({ source }) => {
@@ -10,24 +10,22 @@ const SourceBadge = ({ source }) => {
     collaborative: {
       icon: <Users size={12} />,
       label: 'Recommandé pour vous',
-      className: 'bg-blue-100 text-blue-700',
+      className: 'bg-blue-100 text-blue-700 border border-blue-200',
     },
     content: {
-      icon: <Sparkles size={12} />,
-      label: 'Produit similaire',
-      className: 'bg-purple-100 text-purple-700',
+      // icon: <Sparkles size={12} />,
+      // label: 'Produit similaire',
+      // className: 'bg-purple-100 text-purple-700 border border-purple-200',
     },
     popular: {
       icon: <TrendingUp size={12} />,
       label: 'Populaire',
-      className: 'bg-orange-100 text-orange-700',
+      className: 'bg-orange-100 text-orange-700 border border-orange-200',
     },
   };
   const c = config[source] || config.popular;
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${c.className}`}
-    >
+    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium backdrop-blur-sm ${c.className}`}>
       {c.icon}
       {c.label}
     </span>
@@ -37,13 +35,40 @@ const SourceBadge = ({ source }) => {
 // Carte produit recommandé
 const RecoCard = ({ produit, source }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth || { user: null });
 
   const handleAddToCart = (e) => {
-    e.preventDefault();
-    dispatch(addToCart(produit));
+    e.preventDefault(); // Bloque le clic sur le Link parent
+    e.stopPropagation(); // Évite la propagation de l'événement
+
+    if (user) {
+      dispatch(ajouterAuPanier({ 
+        produit_id: produit.id, 
+        quantite: 1, 
+        produit: produit 
+      }));
+    } else {
+      dispatch(addToCart(produit));
+    }
+  };
+
+  // Traitement sécurisé de l'URL de l'image
+  const getImageUrl = () => {
+    const imgRaw = produit.image_principale || produit.image;
+    if (!imgRaw) return '/placeholder.jpg';
+    // Si l'image est déjà une URL complète (déjà formatée par le service)
+    if (imgRaw.startsWith('http://') || imgRaw.startsWith('https://')) {
+      return imgRaw;
+    }
+    // Fallback de sécurité : Ajout dynamique du serveur de stockage local MinIO
+    return `http://localhost:9000/cekema-products/${imgRaw}`;
   };
 
   return (
+    /*  CORRECTION DE ROUTE : Assure-toi que le chemin correspond bien à ton routeur.
+       Si ta route dans App.jsx est '/produit/:id', remplace '/product/' par '/produit/'
+    */
     <Link
       to={`/product/${produit.id}`}
       className="group flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
@@ -51,46 +76,49 @@ const RecoCard = ({ produit, source }) => {
       {/* Image */}
       <div className="relative h-44 bg-gray-50 overflow-hidden">
         <img
-          src={produit.image_principale || produit.image || '/placeholder.jpg'}
+          src={getImageUrl()}
           alt={produit.nom}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/300x200?text=Produit';
+            e.target.onerror = null; 
+            e.target.src = 'https://via.placeholder.com/300x200?text=Cekema+Market';
           }}
         />
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2 z-10">
           <SourceBadge source={source} />
         </div>
       </div>
 
       {/* Infos */}
       <div className="flex flex-col flex-1 p-3 gap-2">
-        <p className="text-xs text-gray-400 uppercase tracking-wide">
-          {produit.categorie || 'Produit'}
+        <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">
+          {produit.categorie || 'Boutique'}
         </p>
-        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug h-10 group-hover:text-[#008294] transition-colors">
           {produit.nom}
         </h3>
 
         {/* Note */}
-        {produit.note_moyenne && (
+        {produit.note_moyenne && Number(produit.note_moyenne) > 0 && (
           <div className="flex items-center gap-1">
             <Star size={12} className="text-yellow-400 fill-yellow-400" />
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 font-medium">
               {Number(produit.note_moyenne).toFixed(1)}
             </span>
           </div>
         )}
 
         {/* Prix + bouton */}
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-          <span className="text-base font-bold text-gray-900">
-            {Number(produit.prix_unitaire || produit.prix || 0).toLocaleString('fr-FR')}{' '}
-            <span className="text-xs font-normal text-gray-500">FCFA</span>
-          </span>
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-gray-900 leading-none">
+              {Number(produit.prix_unitaire || produit.prix || 0).toLocaleString('fr-FR')}
+            </span>
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">FCFA</span>
+          </div>
           <button
             onClick={handleAddToCart}
-            className="flex items-center gap-1 bg-[#008294] text-white text-xs px-3 py-1.5 rounded-lg hover:bg-[#006b7a] transition-colors"
+            className="flex items-center gap-1 bg-[#008294] text-white text-xs px-3 py-2 rounded-lg hover:bg-[#006b7a] active:scale-95 transition-all shadow-sm font-medium"
           >
             <ShoppingCart size={12} />
             Ajouter
@@ -109,10 +137,7 @@ const RecommendationSection = ({ title, produits, source, isLoading }) => {
         <h2 className="text-xl font-bold text-gray-800 mb-4">{title}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-gray-100 rounded-xl h-64 animate-pulse"
-            />
+            <div key={i} className="bg-gray-100 rounded-xl h-64 animate-pulse" />
           ))}
         </div>
       </section>
@@ -125,7 +150,6 @@ const RecommendationSection = ({ title, produits, source, isLoading }) => {
     <section className="my-10">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-        <SourceBadge source={source} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {produits.slice(0, 8).map((produit) => (

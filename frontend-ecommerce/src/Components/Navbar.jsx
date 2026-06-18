@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ShoppingCart, Search, User, LogOut, Menu, X, ChevronDown,
 } from 'lucide-react';
-import { filterBySearch } from '../features/products/ProductsSlice';
+import { setSearchQuery } from '../features/products/ProductsSlice';
 import { selectCartCount } from '../features/Cart/CartSlice';
 import { logoutUser } from '../features/auth/authSlice';
 
@@ -13,13 +13,19 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // État local pour le champ de recherche — le Redux dispatch est déboncé
+  const [localSearch, setLocalSearch] = useState('');
 
   const cartCount = useSelector(selectCartCount);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  const handleSearch = (e) => {
-    dispatch(filterBySearch(e.target.value));
-  };
+  // Debounce 350ms : dispatch vers Redux seulement après une pause de frappe
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dispatch(setSearchQuery(localSearch));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [localSearch, dispatch]);
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -47,7 +53,8 @@ const Navbar = () => {
             <input
               type="text"
               placeholder="Rechercher un produit..."
-              onChange={handleSearch}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               className="bg-transparent flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
             />
           </div>
@@ -146,7 +153,8 @@ const Navbar = () => {
               <input
                 type="text"
                 placeholder="Rechercher..."
-                onChange={handleSearch}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
                 className="bg-transparent flex-1 text-sm outline-none text-gray-700"
               />
             </div>
